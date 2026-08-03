@@ -1,0 +1,27 @@
+# Secrets / credentials
+.env
+.env.*
+*.pem
+*.key
+.aws/
+credentials.json
+secrets.toml
+.streamlit/secrets.toml
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# MLflow
+mlflow.db
+mlruns/
+mlartifacts/
+
+# OS
+.DS_Store

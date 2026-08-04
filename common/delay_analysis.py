@@ -37,11 +37,15 @@ def simulate(dfda, chained, median_price_per_day, threshold, scope):
     """
     Simule l'impact d'un seuil de tolérance sur les locations chaînées.
     threshold : seuil de tolérance en minutes
-    scope : 'connect_only' pour ne considérer que les locations connect, 'all' pour toutes les locations
+    scope : 'connect_only' (locations connect uniquement), 'mobile_only' (locations mobile
+    uniquement), 'all' (toutes les locations)
     """
     if scope == "connect_only":
         scope_mask_full = dfda["checkin_type"] == "connect"
         scope_mask_chained = chained["checkin_type"] == "connect"
+    elif scope == "mobile_only":
+        scope_mask_full = dfda["checkin_type"] == "mobile"
+        scope_mask_chained = chained["checkin_type"] == "mobile"
     else:
         scope_mask_full = pd.Series(True, index=dfda.index)
         scope_mask_chained = pd.Series(True, index=chained.index)
@@ -77,7 +81,7 @@ def simulate(dfda, chained, median_price_per_day, threshold, scope):
     }
 
 
-def run_simulation_grid(dfda, chained, median_price_per_day, thresholds=None, scopes=("all", "connect_only")):
+def run_simulation_grid(dfda, chained, median_price_per_day, thresholds=None, scopes=("all", "connect_only", "mobile_only")):
     """Calcule simulate() sur une grille de seuils x scopes, retourne le DataFrame results."""
     if thresholds is None:
         max_time_delta = int(chained["time_delta_with_previous_rental_in_minutes"].max())

@@ -10,6 +10,11 @@ from common.delay_analysis import load_delay_data, build_chained, load_price_pro
 
 st.set_page_config(page_title="GetAround - Délai minimum entre locations", layout="wide")
 
+st.markdown(
+    "<style>.block-container { padding-top: 2rem; }</style>",
+    unsafe_allow_html=True,
+)
+
 
 @st.cache_data
 def get_data():
@@ -22,7 +27,7 @@ def get_data():
 
 dfda, chained, median_price_per_day, grid = get_data()
 
-st.title("GetAround — Délai minimum entre deux locations")
+st.title("GetAround - Délai minimum entre deux locations")
 st.markdown(
     "Aide à la décision pour le choix d'un **délai minimum** entre deux locations d'un même véhicule, "
     "et du **périmètre** de véhicules concerné (tout le parc ou Connect uniquement)."
@@ -33,8 +38,8 @@ threshold = st.sidebar.slider(
     "Seuil minimum entre 2 locations (minutes)",
     min_value=0, max_value=720, step=30, value=120,
 )
-scope_label = st.sidebar.selectbox("Périmètre des véhicules", ["Toutes les voitures", "Connect uniquement"])
-scope = "all" if scope_label == "Toutes les voitures" else "connect_only"
+scope_label = st.sidebar.selectbox("Check-in", ["Tous", "Connect uniquement", "Mobile uniquement"])
+scope = {"Tous": "all", "Connect uniquement": "connect_only", "Mobile uniquement": "mobile_only"}[scope_label]
 
 result = simulate(dfda, chained, median_price_per_day, threshold, scope)
 
@@ -55,12 +60,20 @@ col3.metric(
     f"{result['n_resolved']} / {result['n_problematic']}",
 )
 
+def highlight_selected_scope(fig):
+    """Épaissit la courbe correspondant au scope actuellement sélectionné dans le filtre Check-in."""
+    fig.for_each_trace(
+        lambda tr: tr.update(line=dict(width=4)) if tr.name == scope else tr.update(line=dict(width=1.5))
+    )
+    return fig
+
+
 st.subheader("% de locations affectées selon le seuil")
 fig_affected = px.line(grid, x="threshold", y="pct_affected", color="scope", markers=True)
 fig_affected.add_vline(x=threshold, line_dash="dash", line_color="red")
-st.plotly_chart(fig_affected, use_container_width=True)
+st.plotly_chart(highlight_selected_scope(fig_affected), use_container_width=True)
 
 st.subheader("Cas problématiques résolus selon le seuil")
 fig_resolved = px.line(grid, x="threshold", y="n_resolved", color="scope", markers=True)
 fig_resolved.add_vline(x=threshold, line_dash="dash", line_color="red")
-st.plotly_chart(fig_resolved, use_container_width=True)
+st.plotly_chart(highlight_selected_scope(fig_resolved), use_container_width=True)
